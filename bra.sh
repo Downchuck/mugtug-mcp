@@ -68,7 +68,31 @@ MARKDOWN
 
 JSON_CONTEXT=$(echo "$JSON_CONTEXT" | jq -M --raw-input --slurp .)
 
-curl -v "https://openrouter.ai/api/v1/chat/completions" \
+HTTP_POST=$(cat << E
+  -d '{
+    "model": "qwen/qwen3-32b",
+    "provider": {
+      "order": ["cerebras"],
+      "allow_fallbacks": false
+    },
+    "messages": [
+      {
+        "role": "system",
+        "content": $JSON_CONTEXT
+      },
+      {
+        "role": "user",
+        "content": $JSON_PROMPT
+      }
+    ],
+    "temperature": 0.7,
+    "max_tokens": 16382
+  }' | jq -r '.choices[0].message.content'
+E
+)
+
+if true; then
+curl -s "https://openrouter.ai/api/v1/chat/completions" \
   -H "Authorization: Bearer $API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
@@ -89,4 +113,8 @@ curl -v "https://openrouter.ai/api/v1/chat/completions" \
     ],
     "temperature": 0.7,
     "max_tokens": 16382
-  }' | jq -r '.choices[0].message.content'
+  }'
+# | jq -r '.choices[0].message.content'
+fi;
+
+# echo "$HTTP_POST"
